@@ -57,12 +57,12 @@ Vse kar potrebuješ je IP naslov strežnika in SSH geslo.
 
 [2/6] Podatki o oddaljenem strezniku
 
-  IP naslov streznika: 148.230.109.77
+  IP naslov streznika: 203.0.113.50
   SSH uporabnisko ime [root]: root
   SSH geslo: ****
 
-  Testiram povezavo na root@148.230.109.77...
-  ✓ Povezava uspesna! Streznik: srv1225913
+  Testiram povezavo na root@203.0.113.50...
+  ✓ Povezava uspesna! Streznik: my-server
 
 [3/6] Kaj zelis backupirati?
 
@@ -82,8 +82,8 @@ Vse kar potrebuješ je IP naslov strežnika in SSH geslo.
 
 [4/6] Kam shraniti backupe?
 
-  Lokalna pot za backupe [/home/user/backups/srv1225913]:
-  ✓ Mapa ustvarjena: /home/user/backups/srv1225913
+  Lokalna pot za backupe [/home/user/backups/my-server]:
+  ✓ Mapa ustvarjena: /home/user/backups/my-server
 
   Kdaj naj se backup izvaja?
 
@@ -106,7 +106,7 @@ Vse kar potrebuješ je IP naslov strežnika in SSH geslo.
 
 [6/6] Ustvarjam backup skripto...
 
-  ✓ Skripta ustvarjena: /home/user/backups/srv1225913/run_backup.sh
+  ✓ Skripta ustvarjena: /home/user/backups/my-server/run_backup.sh
   ✓ Cron nastavljen: vsak dan ob 4:00
 
   Vse je nastavljeno! Pozenem prvi backup...
@@ -117,13 +117,13 @@ Vse kar potrebuješ je IP naslov strežnika in SSH geslo.
   SETUP KONCAN
 ============================================================
 
-  Streznik:      root@148.230.109.77 (srv1225913)
-  Backupi v:     /home/user/backups/srv1225913
+  Streznik:      root@203.0.113.50 (my-server)
+  Backupi v:     /home/user/backups/my-server
   Urnik:         vsak dan ob 4:00
   Rotacija:      14 dni
   SSH kljuc:     /home/user/.ssh/id_ed25519_backup
-  Skripta:       /home/user/backups/srv1225913/run_backup.sh
-  Log:           /home/user/backups/srv1225913/backup.log
+  Skripta:       /home/user/backups/my-server/run_backup.sh
+  Log:           /home/user/backups/my-server/backup.log
 ```
 
 ## Po namestitvi
@@ -132,13 +132,13 @@ Vse kar potrebuješ je IP naslov strežnika in SSH geslo.
 
 ```bash
 # Rocno pozeni backup
-~/backups/srv1225913/run_backup.sh
+~/backups/my-server/run_backup.sh
 
 # Poglej log
-cat ~/backups/srv1225913/backup.log
+cat ~/backups/my-server/backup.log
 
 # Poglej backupe
-ls -lh ~/backups/srv1225913/
+ls -lh ~/backups/my-server/
 
 # Poglej cron
 crontab -l
@@ -150,7 +150,7 @@ crontab -l | grep -v run_backup | crontab -
 ### Struktura backupov
 
 ```
-~/backups/srv1225913/
+~/backups/my-server/
 ├── run_backup.sh              # Backup skripta (avtogenerirana)
 ├── backup.log                 # Log vseh backupov
 ├── database/                  # PostgreSQL/MySQL dumpi
