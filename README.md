@@ -1,20 +1,25 @@
 # do-backup
 
-Interaktivna skripta za avtomatski backup oddaljenega Linux strežnika. Ena skripta, en ukaz - vse nastavi sama.
+Interaktivna skripta za avtomatski backup oddaljenega strežnika. Ena skripta, en ukaz - vse nastavi sama.
 
-## Kaj naredi?
+Podpira **Linux** in **Windows**, s tremi načini prenosa: **rsync+SSH**, **SFTP** in **FTP**.
 
-- Namesti manjkajoče orodje (rsync, sshpass, openssh, cron)
-- Odkrije kaj je na strežniku (PostgreSQL, MySQL, Docker Compose, obstoječi backupi)
-- Ustvari SSH ključ za avtomatsko povezavo (brez gesel)
-- Nastavi dnevni/urni backup s cron jobom
-- Požene prvi backup takoj
+## Primerjava protokolov
 
-Podpira: **Ubuntu/Debian, Fedora/RHEL, Arch, openSUSE, Alpine**
+| | rsync+SSH (Linux) | SFTP (Linux + Windows) | FTP (Linux + Windows) |
+|---|---|---|---|
+| Inkrementalni sync | Da | Ne | Da (lftp/mirror) |
+| Odkrivanje baz (PostgreSQL, MySQL) | Da | Ne | Ne |
+| Docker Compose konfigi | Da | Ne | Ne |
+| Brez gesla (SSH ključ) | Da | Da | Ne |
+| Custom pot | Da | Da | Da |
+| Potrebuje na strežniku | SSH + rsync | SSH/SFTP | FTP |
+
+**Priporočilo:** Če imate SSH dostop, uporabite **rsync+SSH** (Linux) ali **SFTP** (Windows). FTP uporabite samo če SSH ni na voljo (npr. NAS z samo FTP).
 
 ## Hitri start
 
-### 1. Prenesi skripto
+### Linux
 
 ```bash
 # Opcija A: git clone
@@ -23,115 +28,125 @@ cd do-backup
 
 # Opcija B: samo skripto
 curl -O https://raw.githubusercontent.com/Dzo4e2250/do-backup/main/backup-setup.sh
-```
 
-### 2. Naredi izvršljivo
-
-```bash
+# Poženi
 chmod +x backup-setup.sh
-```
-
-### 3. Poženi
-
-```bash
 ./backup-setup.sh
 ```
 
-To je to. Skripta te vodi skozi vse korake.
+### Windows
+
+```powershell
+# Opcija A: git clone
+git clone https://github.com/Dzo4e2250/do-backup.git
+cd do-backup
+
+# Opcija B: samo skripto
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Dzo4e2250/do-backup/main/backup-setup.ps1" -OutFile "backup-setup.ps1"
+
+# Poženi (kot Administrator za Task Scheduler)
+PowerShell -ExecutionPolicy Bypass -File backup-setup.ps1
+```
 
 ## Kako izgleda?
+
+### Linux (rsync+SSH)
 
 ```
 ============================================================
   AVTOMATSKI BACKUP SETUP
 ============================================================
 
-Ta skripta nastavi avtomatski dnevni backup z oddaljenega strežnika.
-Vse kar potrebuješ je IP naslov strežnika in SSH geslo.
+Ta skripta nastavi avtomatski dnevni backup z oddaljenega streznika.
 
-[1/6] Preverjam odvisnosti...
+[1/7] Nacin prenosa
+
+    1) rsync + SSH (priporoceno) - polna funkcionalnost
+    2) SFTP (SSH port) - samo prenos datotek
+    3) FTP - samo prenos datotek
+
+  Izbira [1]: 1
+  ✓ Protokol: rsync
+
+[2/7] Preverjam odvisnosti...
   ✓ Package manager: apt
   ✓ rsync ze namescen
   ✓ sshpass ze namescen
   ✓ Vse odvisnosti OK
 
-[2/6] Podatki o oddaljenem strezniku
+[3/7] Podatki o oddaljenem strezniku
 
-  IP naslov streznika: 203.0.113.50
+  IP naslov ali hostname streznika: 203.0.113.50
   SSH uporabnisko ime [root]: root
   SSH geslo: ****
+  SSH port [22]: 22
 
-  Testiram povezavo na root@203.0.113.50...
   ✓ Povezava uspesna! Streznik: my-server
 
-[3/6] Kaj zelis backupirati?
-
-  Iscem kaj je na strezniku...
-
-  Najdeno na strezniku:
+[4/7] Kaj zelis backupirati?
 
     1) Obstoječi backupi: /root/backups/supabase (246M)
     2) PostgreSQL baza (container: supabase-db)
     3) Docker Compose konfiguracije
     4) Vpisi svojo pot (custom)
 
-  Izberi kaj zelis backupirati (vec stevilk loci z vejico, npr: 1,2,3)
   Izbira: 1,2
-  ✓ Izbrano: Obstoječi backupi: /root/backups/supabase (246M)
-  ✓ Izbrano: PostgreSQL baza (container: supabase-db)
+  ✓ Izbrano: Obstoječi backupi
+  ✓ Izbrano: PostgreSQL baza
 
-[4/6] Kam shraniti backupe?
+[5/7] Kam shraniti backupe?
+  ...
 
-  Lokalna pot za backupe [/home/user/backups/my-server]:
-  ✓ Mapa ustvarjena: /home/user/backups/my-server
-
-  Kdaj naj se backup izvaja?
-
-    1) Vsak dan ob 4:00
-    2) Vsak dan ob 2:00
-    3) Vsakih 12 ur
-    4) Vsakih 6 ur
-    5) Vpisi svoj cron izraz
-
-  Izbira [1]: 1
-  ✓ Urnik: vsak dan ob 4:00
-
-  Koliko dni hraniti stare backupe? [14]: 14
-  ✓ Rotacija: 14 dni
-
-[5/6] Nastavljam SSH kljuc za avtomatsko povezavo...
-
-  ✓ SSH kljuc ustvarjen: /home/user/.ssh/id_ed25519_backup
+[6/7] Nastavljam avtentikacijo...
   ✓ SSH brez gesla deluje!
 
-[6/6] Ustvarjam backup skripto...
-
-  ✓ Skripta ustvarjena: /home/user/backups/my-server/run_backup.sh
+[7/7] Ustvarjam backup skripto...
+  ✓ Skripta ustvarjena
   ✓ Cron nastavljen: vsak dan ob 4:00
+```
 
-  Vse je nastavljeno! Pozenem prvi backup...
+### Windows (SFTP)
 
-  ✓ Prvi backup koncen!
-
+```
 ============================================================
-  SETUP KONCAN
+  AVTOMATSKI BACKUP SETUP (Windows)
 ============================================================
 
-  Streznik:      root@203.0.113.50 (my-server)
-  Backupi v:     /home/user/backups/my-server
-  Urnik:         vsak dan ob 4:00
-  Rotacija:      14 dni
-  SSH kljuc:     /home/user/.ssh/id_ed25519_backup
-  Skripta:       /home/user/backups/my-server/run_backup.sh
-  Log:           /home/user/backups/my-server/backup.log
+[1/7] Nacin prenosa
+
+    1) SFTP (priporoceno) - potrebuje OpenSSH
+    2) FTP - vgrajen v Windows
+
+  Izbira [1]: 1
+  [OK] Protokol: sftp
+
+[2/7] Preverjam odvisnosti...
+  [OK] OpenSSH najden
+  [OK] Vse odvisnosti OK
+
+[3/7] Podatki o oddaljenem strezniku
+  ...
+
+[4/7] Kaj zelis backupirati?
+  Pot na strezniku (npr: /volume1/web): /volume1/web
+  [OK] Dodano: /volume1/web
+
+[5/7] Kam shraniti backupe?
+  ...
+
+[6/7] Nastavljam avtentikacijo...
+  [OK] SSH kljuc ustvarjen
+
+[7/7] Ustvarjam backup skripto...
+  [OK] Task Scheduler nastavljen: vsak dan ob 4:00
 ```
 
 ## Po namestitvi
 
-### Uporabni ukazi
+### Linux - uporabni ukazi
 
 ```bash
-# Rocno pozeni backup
+# Ročno poženi backup
 ~/backups/my-server/run_backup.sh
 
 # Poglej log
@@ -147,27 +162,44 @@ crontab -l
 crontab -l | grep -v run_backup | crontab -
 ```
 
-### Struktura backupov
+### Windows - uporabni ukazi
+
+```powershell
+# Ročno poženi backup
+& "$env:USERPROFILE\backups\my-server\run_backup.ps1"
+
+# Poglej log
+Get-Content "$env:USERPROFILE\backups\my-server\backup.log"
+
+# Poglej backupe
+Get-ChildItem "$env:USERPROFILE\backups\my-server"
+
+# Odpri Task Scheduler
+taskschd.msc
+
+# Odstrani task
+Unregister-ScheduledTask -TaskName "Backup-my-server"
+```
+
+## Struktura backupov
 
 ```
-~/backups/my-server/
-├── run_backup.sh              # Backup skripta (avtogenerirana)
-├── backup.log                 # Log vseh backupov
-├── database/                  # PostgreSQL/MySQL dumpi
+~/backups/my-server/              (Linux)
+%USERPROFILE%\backups\my-server\  (Windows)
+├── run_backup.sh / .ps1          # Backup skripta (avtogenerirana)
+├── backup.log                    # Log vseh backupov
+├── database/                     # PostgreSQL/MySQL dumpi (samo rsync)
 │   ├── postgres_20260314_0400.sql.gz
-│   ├── postgres_20260313_0400.sql.gz
 │   └── ...
-├── supabase/                  # Rsync obstojecih backupov
-│   ├── supabase_20260314_030001.sql.gz
+├── web/                          # Rsync/SFTP/FTP prenosi
 │   └── ...
-└── configs/                   # Docker Compose konfiguracije
-    ├── configs_20260314_0400.tar.gz
+└── configs/                      # Docker Compose konfigi (samo rsync)
     └── ...
 ```
 
 ## Kaj backupira?
 
-Skripta avtomatsko odkrije in ponudi:
+### rsync+SSH (Linux) - polna funkcionalnost
 
 | Tip | Kako | Rotacija |
 |-----|------|----------|
@@ -177,32 +209,56 @@ Skripta avtomatsko odkrije in ponudi:
 | **Docker Compose konfigi** | `tar` vseh docker-compose.yml | Po dnevih |
 | **Custom pot** | `rsync` (inkrementalno) | Rsync sync |
 
+### SFTP (Linux + Windows)
+
+| Tip | Kako | Rotacija |
+|-----|------|----------|
+| **Custom pot** | `sftp get -r` (Linux) / `sftp.exe` batch (Windows) | Po dnevih |
+
+### FTP (Linux + Windows)
+
+| Tip | Kako | Rotacija |
+|-----|------|----------|
+| **Custom pot** | `lftp mirror` (Linux) / PowerShell .NET (Windows) | Po dnevih |
+
 ## Zahteve
 
-- Linux (katerakoli distribucija)
-- `sudo` dostop (za namestitev paketov)
-- SSH dostop do oddaljenega strežnika (IP + geslo)
-- Na oddaljenem strežniku: `rsync` (za sync map)
+### Linux
 
-Skripta sama namesti: `rsync`, `sshpass`, `openssh-client`, `cron`
+- Katerakoli distribucija (apt, dnf, yum, pacman, zypper, apk)
+- `sudo` dostop (za namestitev paketov)
+- SSH ali FTP dostop do oddaljenega strežnika
+
+Skripta sama namesti potrebne pakete glede na izbrani protokol.
+
+### Windows
+
+- Windows 10+ (za OpenSSH in curl.exe)
+- **SFTP:** OpenSSH Client (Settings → Apps → Optional Features → OpenSSH Client)
+- **FTP:** Vgrajen v PowerShell (ni dodatnih zahtev)
+- Administrator pravice (za Task Scheduler)
 
 ## Varnost
 
-- SSH ključ se shrani v `~/.ssh/id_ed25519_backup` (samo za backup)
-- Geslo strežnika se **ne shrani** nikamor - uporabi se samo za inicalni prenos SSH ključa
-- Vsi nadaljnji backupi uporabljajo SSH ključ (brez gesla)
-- Backup skripta ne potrebuje root pravic na lokalnem strežniku
+- **rsync/SFTP:** SSH ključ se shrani v `~/.ssh/id_ed25519_backup` — geslo se ne shrani
+- **FTP:** Uporabniško ime in geslo sta shranjena v backup skripti — skripta ima pravice 600
+- Vsi nadaljnji backupi (rsync/SFTP) uporabljajo SSH ključ brez gesla
+- Backup skripta ne potrebuje root pravic na lokalnem računalniku
+
+**Priporočilo:** Izogibajte se FTP če je mogoče. SFTP je varnejši (šifrirano) in ne shranjuje gesel.
 
 ## Uporaba z USB
 
 ```bash
-# Na USB kopiraj:
+# Linux
 cp backup-setup.sh /media/usb/
+# Na novem računalniku:
+chmod +x /media/usb/backup-setup.sh && /media/usb/backup-setup.sh
 
-# Na novem strežniku:
-cp /media/usb/backup-setup.sh .
-chmod +x backup-setup.sh
-./backup-setup.sh
+# Windows
+copy backup-setup.ps1 E:\
+# Na novem računalniku (PowerShell):
+PowerShell -ExecutionPolicy Bypass -File E:\backup-setup.ps1
 ```
 
 ## Licenca
